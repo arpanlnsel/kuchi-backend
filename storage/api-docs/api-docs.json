@@ -9,6 +9,267 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/admin/home-banner": {
+            "get": {
+                "tags": [
+                    "Home Banner"
+                ],
+                "summary": "Get all home banners (Public - No authentication required)",
+                "operationId": "348957539c607d3184f8324465c8e39a",
+                "parameters": [
+                    {
+                        "name": "device_type",
+                        "in": "query",
+                        "description": "Filter by device type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mobile",
+                                "desktop",
+                                "tablet",
+                                "all"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of home banners",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Home Banner (Admin)"
+                ],
+                "summary": "Create a new home banner (Admin only)",
+                "operationId": "c5faded541c57bd4731413c5b07ba3a1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "banner_title",
+                                    "priority",
+                                    "device_type",
+                                    "image"
+                                ],
+                                "properties": {
+                                    "banner_title": {
+                                        "type": "string",
+                                        "example": "Summer Sale Banner"
+                                    },
+                                    "priority": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "device_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "mobile",
+                                            "desktop",
+                                            "tablet",
+                                            "all"
+                                        ],
+                                        "example": "all"
+                                    },
+                                    "image": {
+                                        "description": "Banner image file",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Banner created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/home-banner/{id}": {
+            "get": {
+                "tags": [
+                    "Home Banner"
+                ],
+                "summary": "Get a specific home banner (Public - No authentication required)",
+                "operationId": "8d2744a6ef599a178239eb1f74201792",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banner details"
+                    },
+                    "404": {
+                        "description": "Banner not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Home Banner (Admin)"
+                ],
+                "summary": "Update a home banner (Admin only)",
+                "operationId": "fc2b72dcf8a4bd6b29cef03887abeecb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
+                                    "banner_title": {
+                                        "type": "string",
+                                        "example": "Updated Banner Title"
+                                    },
+                                    "priority": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "device_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "mobile",
+                                            "desktop",
+                                            "tablet",
+                                            "all"
+                                        ]
+                                    },
+                                    "image": {
+                                        "description": "New banner image (optional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Banner updated successfully"
+                    },
+                    "404": {
+                        "description": "Banner not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Home Banner (Admin)"
+                ],
+                "summary": "Delete a home banner (Admin only)",
+                "operationId": "2ab02f7a82637c036dcc314cd775a2fe",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banner deleted successfully"
+                    },
+                    "404": {
+                        "description": "Banner not found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "tags": [
@@ -478,6 +739,14 @@
         }
     },
     "tags": [
+        {
+            "name": "Home Banner",
+            "description": "Home Banner"
+        },
+        {
+            "name": "Home Banner (Admin)",
+            "description": "Home Banner (Admin)"
+        },
         {
             "name": "Authentication",
             "description": "Authentication"
