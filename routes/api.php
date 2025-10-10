@@ -25,6 +25,7 @@ Route::middleware('auth:api')->group(function () {
     // MataData routes - accessible by both admin and sales
     Route::middleware('role:sales,admin')->group(function () {
         Route::get('mata-data', [MataDataController::class, 'index']);
+        Route::get('mata-data/active-sessions', [MataDataController::class, 'getActiveSessions']);
         Route::get('mata-data/{mata_id}', [MataDataController::class, 'show']);
         Route::get('mata-data/user/{user_id}', [MataDataController::class, 'getByUser']);
     });

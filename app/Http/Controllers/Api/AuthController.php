@@ -206,25 +206,40 @@ class AuthController extends Controller
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/auth/logout",
-     *     summary="Logout user",
-     *     tags={"Authentication"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successfully logged out",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Successfully logged out")
-     *         )
-     *     )
-     * )
-     */
-    public function logout()
-    {
-        auth()->logout();
-        return response()->json(['message' => 'Successfully logged out']);
+ * @OA\Post(
+ *     path="/api/auth/logout",
+ *     summary="Logout user and update mata data",
+ *     tags={"Authentication"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successfully logged out",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Successfully logged out")
+ *         )
+ *     )
+ * )
+ */
+public function logout()
+{
+    $user = auth()->user();
+    
+    // Update the most recent mata_data entry for this user
+    $latestMataData = MataData::where('user_id', $user->id)
+        ->where('is_logout', false)
+        ->orderBy('last_login_time', 'desc')
+        ->first();
+    
+    if ($latestMataData) {
+        $latestMataData->logout_time = now();
+        $latestMataData->is_logout = true;
+        $latestMataData->save();
     }
+    
+    auth()->logout();
+    
+    return response()->json(['message' => 'Successfully logged out']);
+}
 
     /**
      * @OA\Post(

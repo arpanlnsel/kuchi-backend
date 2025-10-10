@@ -21,6 +21,13 @@ class MataDataController extends Controller
      *         required=false,
      *         @OA\Schema(type="string", format="uuid")
      *     ),
+     *     @OA\Parameter(
+     *         name="is_logout",
+     *         in="query",
+     *         description="Filter by logout status (optional)",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="List of all mata data",
@@ -36,6 +43,8 @@ class MataDataController extends Controller
      *                     @OA\Property(property="device_name", type="string", example="iPhone 14 Pro"),
      *                     @OA\Property(property="device_type", type="string", example="mobile"),
      *                     @OA\Property(property="last_login_time", type="string", format="date-time"),
+     *                     @OA\Property(property="logout_time", type="string", format="date-time", nullable=true),
+     *                     @OA\Property(property="is_logout", type="boolean", example=false),
      *                     @OA\Property(property="user_id", type="string", format="uuid"),
      *                     @OA\Property(property="created_at", type="string", format="date-time"),
      *                     @OA\Property(property="updated_at", type="string", format="date-time"),
@@ -61,6 +70,11 @@ class MataDataController extends Controller
         // Optional: Filter by user_id if provided
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
+        }
+
+        // Optional: Filter by is_logout if provided
+        if ($request->has('is_logout')) {
+            $query->where('is_logout', $request->boolean('is_logout'));
         }
 
         $mataData = $query->orderBy('last_login_time', 'desc')->get();
@@ -137,6 +151,32 @@ class MataDataController extends Controller
             'success' => true,
             'total' => $mataData->count(),
             'data' => $mataData
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/mata-data/active-sessions",
+     *     summary="Get all active sessions (users who haven't logged out)",
+     *     tags={"MataData"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of active sessions"
+     *     )
+     * )
+     */
+    public function getActiveSessions()
+    {
+        $activeSessions = MataData::where('is_logout', false)
+            ->with('user:id,name,email,role')
+            ->orderBy('last_login_time', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'total' => $activeSessions->count(),
+            'data' => $activeSessions
         ]);
     }
 

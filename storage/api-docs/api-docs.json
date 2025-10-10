@@ -428,7 +428,7 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Logout user",
+                "summary": "Logout user and update mata data",
                 "operationId": "df9bdc6c7a6d9f20b983526b2ec0f698",
                 "responses": {
                     "200": {
@@ -835,6 +835,15 @@
                             "type": "string",
                             "format": "uuid"
                         }
+                    },
+                    {
+                        "name": "is_logout",
+                        "in": "query",
+                        "description": "Filter by logout status (optional)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {
@@ -871,6 +880,15 @@
                                                     "last_login_time": {
                                                         "type": "string",
                                                         "format": "date-time"
+                                                    },
+                                                    "logout_time": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    },
+                                                    "is_logout": {
+                                                        "type": "boolean",
+                                                        "example": false
                                                     },
                                                     "user_id": {
                                                         "type": "string",
@@ -1008,6 +1026,25 @@
                 "responses": {
                     "200": {
                         "description": "List of mata data for the user"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/mata-data/active-sessions": {
+            "get": {
+                "tags": [
+                    "MataData"
+                ],
+                "summary": "Get all active sessions (users who haven't logged out)",
+                "operationId": "0be556cdcbdb9e991716e921c0027b47",
+                "responses": {
+                    "200": {
+                        "description": "List of active sessions"
                     }
                 },
                 "security": [
