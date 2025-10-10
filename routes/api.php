@@ -11,11 +11,8 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
-// Public Home Banner routes (no authentication required)
-Route::prefix('admin/home-banner')->group(function () {
-    Route::get('/', [HomeBannerController::class, 'index']);
-    Route::get('/{id}', [HomeBannerController::class, 'show']);
-});
+// Public Home Banner routes
+Route::ApiResource('home-banner', HomeBannerController::class)->only(['index', 'show']);
 
 // Protected routes
 Route::middleware('auth:api')->group(function () {
@@ -32,18 +29,25 @@ Route::middleware('auth:api')->group(function () {
         Route::get('mata-data/user/{user_id}', [MataDataController::class, 'getByUser']);
     });
 
+    // Admin routes - accessible by both admin and sales
+    Route::middleware('role:admin,sales')->prefix('admin')->group(function () {
+        // User Management - accessible by both admin and sales
+        Route::prefix('sales')->group(function () {
+            Route::get('/', [AuthController::class, 'getAllUsers']);
+            Route::get('/{id}', [AuthController::class, 'getUserById']);
+            Route::put('/{id}/status', [AuthController::class, 'updateUserStatus']);
+            Route::put('/{id}/password', [AuthController::class, 'updatePassword']);
+        });
+    });
+
     // Admin only routes
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('dashboard', function () {
             return response()->json(['message' => 'Admin Dashboard']);
         });
         
-        // Home Banner CUD operations - Admin only (Create, Update, Delete)
-        Route::prefix('home-banner')->group(function () {
-            Route::post('/', [HomeBannerController::class, 'store']);
-            Route::post('/{id}', [HomeBannerController::class, 'update']); // POST for multipart/form-data
-            Route::delete('/{id}', [HomeBannerController::class, 'destroy']);
-        });
+        // Home Banner CUD operations - Admin only
+        Route::ApiResource('home-banner', HomeBannerController::class)->only(['store', 'update', 'destroy']);
         
         // Delete mata data (admin only)
         Route::delete('mata-data/{mata_id}', [MataDataController::class, 'destroy']);

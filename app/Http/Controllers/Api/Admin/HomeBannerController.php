@@ -13,7 +13,7 @@ class HomeBannerController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/admin/home-banner",
+     *     path="/api/home-banner",
      *     summary="Get all home banners (Public - No authentication required)",
      *     tags={"Home Banner"},
      *     @OA\Parameter(
@@ -108,7 +108,7 @@ class HomeBannerController extends Controller
             $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
             
             // Store image in public/storage/banners directory
-            $image->storeAs('public/banners', $imageName);
+            Storage::disk('public')->put('banners/' . $imageName, file_get_contents($request->file('image')->getRealPath()));
         }
 
         // Create banner
@@ -132,7 +132,7 @@ class HomeBannerController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/admin/home-banner/{id}",
+     *     path="/api/home-banner/{id}",
      *     summary="Get a specific home banner (Public - No authentication required)",
      *     tags={"Home Banner"},
      *     @OA\Parameter(

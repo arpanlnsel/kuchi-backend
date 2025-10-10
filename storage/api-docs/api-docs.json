@@ -9,13 +9,13 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/api/admin/home-banner": {
+        "/api/home-banner": {
             "get": {
                 "tags": [
                     "Home Banner"
                 ],
                 "summary": "Get all home banners (Public - No authentication required)",
-                "operationId": "348957539c607d3184f8324465c8e39a",
+                "operationId": "8fc6fc9b167ad1d53d7081654ddff574",
                 "parameters": [
                     {
                         "name": "device_type",
@@ -61,7 +61,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/admin/home-banner": {
             "post": {
                 "tags": [
                     "Home Banner (Admin)"
@@ -130,13 +132,13 @@
                 ]
             }
         },
-        "/api/admin/home-banner/{id}": {
+        "/api/home-banner/{id}": {
             "get": {
                 "tags": [
                     "Home Banner"
                 ],
                 "summary": "Get a specific home banner (Public - No authentication required)",
-                "operationId": "8d2744a6ef599a178239eb1f74201792",
+                "operationId": "9a70606eb519176a4a49f19ad9b0ced4",
                 "parameters": [
                     {
                         "name": "id",
@@ -155,7 +157,9 @@
                         "description": "Banner not found"
                     }
                 }
-            },
+            }
+        },
+        "/api/admin/home-banner/{id}": {
             "post": {
                 "tags": [
                     "Home Banner (Admin)"
@@ -504,7 +508,8 @@
                                 "schema": {
                                     "properties": {
                                         "id": {
-                                            "type": "integer"
+                                            "type": "string",
+                                            "format": "uuid"
                                         },
                                         "name": {
                                             "type": "string"
@@ -514,12 +519,296 @@
                                         },
                                         "role": {
                                             "type": "string"
+                                        },
+                                        "isActive": {
+                                            "type": "boolean"
                                         }
                                     },
                                     "type": "object"
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/sales/{id}/status": {
+            "put": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Update user status (activate/deactivate)",
+                "operationId": "d886e123b78d6e4b2d3cf408536795c9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password",
+                                    "isActive"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "description": "Current user password for verification",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "your-current-password"
+                                    },
+                                    "isActive": {
+                                        "description": "Set user active status",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User status updated successfully"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid password"
+                    },
+                    "403": {
+                        "description": "Forbidden - Cannot modify yourself"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/sales/{id}/password": {
+            "put": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Update user password",
+                "operationId": "80677812d110388d109b892e99cdc596",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "old_password",
+                                    "new_password",
+                                    "reenter_new_password"
+                                ],
+                                "properties": {
+                                    "old_password": {
+                                        "description": "Current password",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "oldpassword123"
+                                    },
+                                    "new_password": {
+                                        "description": "New password (min 6 characters)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "reenter_new_password": {
+                                        "description": "Confirm new password",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid old password"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/sales": {
+            "get": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Get all users (Admin and Sales can access)",
+                "operationId": "6850afc51d996e99a705cf776cdbf71e",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter by role",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "admin",
+                                "sales"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "isActive",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/sales/{id}": {
+            "get": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Get user by ID",
+                "operationId": "4d45e5f805471b245b28d5da229c782b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User details"
+                    },
+                    "404": {
+                        "description": "User not found"
                     }
                 },
                 "security": [
@@ -750,6 +1039,10 @@
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "User Management",
+            "description": "User Management"
         },
         {
             "name": "MataData",

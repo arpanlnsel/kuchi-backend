@@ -110,30 +110,35 @@ class AuthController extends Controller
      * )
      */
     public function login(Request $request)
-{
-    $credentials = $request->only('email', 'password');
-    
-    // Debug: Check if user exists
-    $user = User::where('email', $request->email)->first();
-    
-    if (!$user) {
-        return response()->json(['error' => 'User not found'], 404);
-    }
-    
-    // Debug: Check password
-    if (!Hash::check($request->password, $user->password)) {
-        return response()->json(['error' => 'Password does not match'], 401);
-    }
-    
-    if (!$token = auth()->attempt($credentials)) {
-        return response()->json(['error' => 'Invalid credentials'], 401);
-    }
+    {
+        $credentials = $request->only('email', 'password');
+        
+        // Check if user exists
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
 
-    $user = auth()->user();
-    $mataData = $this->saveMataData($request, $user->id);
-    
-    return $this->respondWithToken($token, $mataData);
-}
+        // Check if user is active
+        if (!$user->isActive) {
+            return response()->json(['error' => 'User account is inactive'], 403);
+        }
+        
+        // Check password
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Password does not match'], 401);
+        }
+        
+        if (!$token = auth()->attempt($credentials)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        $user = auth()->user();
+        $mataData = $this->saveMataData($request, $user->id);
+        
+        return $this->respondWithToken($token, $mataData);
+    }
 
     /**
      * Save mata data on login
@@ -253,10 +258,11 @@ class AuthController extends Controller
      *         response=200,
      *         description="User details",
      *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="id", type="string", format="uuid"),
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string"),
-     *             @OA\Property(property="role", type="string")
+     *             @OA\Property(property="role", type="string"),
+     *             @OA\Property(property="isActive", type="boolean")
      *         )
      *     )
      * )
@@ -264,6 +270,271 @@ class AuthController extends Controller
     public function me()
     {
         return response()->json(auth()->user());
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/admin/sales/{id}/status",
+     *     summary="Update user status (activate/deactivate)",
+     *     tags={"User Management"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="User ID (UUID)",
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"password", "isActive"},
+     *             @OA\Property(property="password", type="string", format="password", example="your-current-password", description="Current user password for verification"),
+     *             @OA\Property(property="isActive", type="boolean", example=true, description="Set user active status")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User status updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="User status updated successfully"),
+     *             @OA\Property(property="user", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Invalid password"),
+     *     @OA\Response(response=403, description="Forbidden - Cannot modify yourself"),
+     *     @OA\Response(response=404, description="User not found")
+     * )
+     */
+    public function updateUserStatus(Request $request, $id)
+    {
+        // Find the user to update
+        $userToUpdate = User::find($id);
+
+        if (!$userToUpdate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Prevent user from modifying themselves
+        if (auth()->id() === $userToUpdate->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot modify your own status'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string',
+            'isActive' => 'required|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Verify the current user's password
+        if (!Hash::check($request->password, auth()->user()->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid password. Password verification failed.'
+            ], 401);
+        }
+
+        // Update the user status
+        $userToUpdate->isActive = $request->isActive;
+        $userToUpdate->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User status updated successfully',
+            'user' => $userToUpdate
+        ]);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/admin/sales/{id}/password",
+     *     summary="Update user password",
+     *     tags={"User Management"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="User ID (UUID)",
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"old_password", "new_password", "reenter_new_password"},
+     *             @OA\Property(property="old_password", type="string", format="password", example="oldpassword123", description="Current password"),
+     *             @OA\Property(property="new_password", type="string", format="password", example="newpassword123", description="New password (min 6 characters)"),
+     *             @OA\Property(property="reenter_new_password", type="string", format="password", example="newpassword123", description="Confirm new password")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Password updated successfully")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Invalid old password"),
+     *     @OA\Response(response=404, description="User not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function updatePassword(Request $request, $id)
+    {
+        // Find the user to update
+        $userToUpdate = User::find($id);
+
+        if (!$userToUpdate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:6',
+            'reenter_new_password' => 'required|string|same:new_password',
+        ], [
+            'reenter_new_password.same' => 'New password and re-entered password must match'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Verify the old password
+        if (!Hash::check($request->old_password, $userToUpdate->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Old password is incorrect'
+            ], 401);
+        }
+
+        // Check if new password is same as old password
+        if (Hash::check($request->new_password, $userToUpdate->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'New password cannot be the same as old password'
+            ], 422);
+        }
+
+        // Update the password
+        $userToUpdate->password = Hash::make($request->new_password);
+        $userToUpdate->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully'
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/admin/sales",
+     *     summary="Get all users (Admin and Sales can access)",
+     *     tags={"User Management"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="role",
+     *         in="query",
+     *         description="Filter by role",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"admin", "sales"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="isActive",
+     *         in="query",
+     *         description="Filter by active status",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of users",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="total", type="integer", example=10),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function getAllUsers(Request $request)
+    {
+        $query = User::query();
+
+        // Filter by role if provided
+        if ($request->has('role')) {
+            $query->where('role', $request->role);
+        }
+
+        // Filter by active status if provided
+        if ($request->has('isActive')) {
+            $query->where('isActive', $request->boolean('isActive'));
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'success' => true,
+            'total' => $users->count(),
+            'data' => $users
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/admin/sales/{id}",
+     *     summary="Get user by ID",
+     *     tags={"User Management"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User details"
+     *     ),
+     *     @OA\Response(response=404, description="User not found")
+     * )
+     */
+    public function getUserById($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $user
+        ]);
     }
 
     protected function respondWithToken($token, $mataData = null)
