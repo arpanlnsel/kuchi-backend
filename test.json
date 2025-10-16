@@ -1,0 +1,20 @@
+{
+  "title": "Victory Rope Expo 2025",
+  "description": "A global event showcasing the latest rope and twine products.",
+  "venue": "JAFZA Exhibition Center, Dubai",
+  "status": "Active",
+  "start_time": "2025-10-25T10:00:00",
+  "end_time": "2025-10-25T18:00:00",
+  "show_video_details": true,
+  "event_location": "Hall 3, Gate B",
+  "videos": [
+    {
+      "title": "Event Promo",
+      "url": "https://youtu.be/promo123"
+    },
+    {
+      "title": "Highlights",
+      "url": "https://youtu.be/highlights456"
+    }
+  ]
+}

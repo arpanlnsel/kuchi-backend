@@ -818,6 +818,323 @@
                 ]
             }
         },
+        "/api/events": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get all events (Public - No authentication required)",
+                "operationId": "e529c81e6aaec82f49950a87ed881f57",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Active",
+                                "Inactive",
+                                "Cancelled",
+                                "Completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "EventType",
+                        "in": "query",
+                        "description": "Filter by event type based on start time",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "newEvent",
+                                "oldEvent"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of events"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Create a new event (Admin only)",
+                "operationId": "e958e1c6c275d5f9b7ebcd837903d0ef",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "venue",
+                                    "start_time",
+                                    "end_time"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Annual Tech Conference"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "An event for tech enthusiasts."
+                                    },
+                                    "venue": {
+                                        "type": "string",
+                                        "example": "Dubai World Trade Center"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Active",
+                                            "Inactive",
+                                            "Cancelled",
+                                            "Completed"
+                                        ]
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-10-20T10:00:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-10-20T18:00:00"
+                                    },
+                                    "show_video_details": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "event_location": {
+                                        "type": "string",
+                                        "example": "Hall 3, Gate A"
+                                    },
+                                    "main_image": {
+                                        "description": "Main event image",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "event_images[]": {
+                                        "description": "Multiple event images",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "videos": {
+                                        "description": "JSON string of videos. Example: [{title: Intro, url: https://youtu.be/abc}]",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Event created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/events/{event_id}": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get event by ID (Public - No authentication required)",
+                "operationId": "d019abe74209e7f5ea95b21c128ca7ed",
+                "parameters": [
+                    {
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event details"
+                    },
+                    "404": {
+                        "description": "Event not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Update an event (Admin only)",
+                "operationId": "beed9a9cdb393ec030577d532f94bca1",
+                "parameters": [
+                    {
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Annual Tech Conference"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "An event for tech enthusiasts."
+                                    },
+                                    "venue": {
+                                        "type": "string",
+                                        "example": "Dubai World Trade Center"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Active",
+                                            "Inactive",
+                                            "Cancelled",
+                                            "Completed"
+                                        ]
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-10-20T10:00:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-10-20T18:00:00"
+                                    },
+                                    "show_video_details": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "event_location": {
+                                        "type": "string",
+                                        "example": "Hall 3, Gate A"
+                                    },
+                                    "main_image": {
+                                        "description": "Main event image",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "event_images[]": {
+                                        "description": "Multiple event images",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "videos": {
+                                        "description": "JSON string of videos. Example: [{title: Intro, url: https://youtu.be/abc}]",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Event updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "404": {
+                        "description": "Event not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Delete an event (Admin only)",
+                "operationId": "6efb45f4aa1a67278d6b502276692820",
+                "parameters": [
+                    {
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "404": {
+                        "description": "Event not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/mata-data": {
             "get": {
                 "tags": [
@@ -1080,6 +1397,10 @@
         {
             "name": "User Management",
             "description": "User Management"
+        },
+        {
+            "name": "Events",
+            "description": "Events"
         },
         {
             "name": "MataData",
