@@ -1370,6 +1370,377 @@
                     }
                 ]
             }
+        },
+        "/api/stone-groups": {
+            "get": {
+                "tags": [
+                    "Stone Groups"
+                ],
+                "summary": "Get all stone groups with pagination (Admin only)",
+                "operationId": "72016b384f1ee81a2398fb696dee240b",
+                "parameters": [
+                    {
+                        "name": "is_disabled",
+                        "in": "query",
+                        "description": "Filter by disabled status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (default: 15)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of stone groups"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stone Groups"
+                ],
+                "summary": "Create a new stone group (Admin only)",
+                "operationId": "4ec7390630866bec3d9d6933d22b92b2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "stonegroup_name",
+                                    "stonegroup_GUID"
+                                ],
+                                "properties": {
+                                    "stonegroup_GUID": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                    },
+                                    "stonegroup_name": {
+                                        "type": "string",
+                                        "example": "Granite Group"
+                                    },
+                                    "stonegroup_shortname": {
+                                        "type": "string",
+                                        "example": "GRAN"
+                                    },
+                                    "is_disabled": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stone group created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stone-groups/{stonegroup_ID}": {
+            "get": {
+                "tags": [
+                    "Stone Groups"
+                ],
+                "summary": "Get stone group by ID (Admin only)",
+                "operationId": "c2de5878861e4034543f7fc373d64f09",
+                "parameters": [
+                    {
+                        "name": "stonegroup_ID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stone group details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "404": {
+                        "description": "Stone group not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stone Groups"
+                ],
+                "summary": "Update a stone group (Admin only)",
+                "operationId": "d13f3d574230022cd48f3289e69c212e",
+                "parameters": [
+                    {
+                        "name": "stonegroup_ID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "stonegroup_GUID": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                    },
+                                    "stonegroup_name": {
+                                        "type": "string",
+                                        "example": "Updated Granite Group"
+                                    },
+                                    "stonegroup_shortname": {
+                                        "type": "string",
+                                        "example": "UGRAN"
+                                    },
+                                    "is_disabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stone group updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "404": {
+                        "description": "Stone group not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stone Groups"
+                ],
+                "summary": "Delete a stone group (Admin only)",
+                "operationId": "9bc28bbe7355522fcf7ab07364ce1dd7",
+                "parameters": [
+                    {
+                        "name": "stonegroup_ID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stone group deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "404": {
+                        "description": "Stone group not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stone-groups/search/{keyword}": {
+            "get": {
+                "tags": [
+                    "Stone Groups"
+                ],
+                "summary": "Search stone groups by keyword (Admin only)",
+                "operationId": "c0b9c38be677031fb79210825918a859",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_disabled",
+                        "in": "query",
+                        "description": "Filter by disabled status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stone-groups/bulk-upload": {
+            "post": {
+                "tags": [
+                    "Stone Groups"
+                ],
+                "summary": "Bulk upload stone groups from Excel file (Admin only)",
+                "operationId": "9dcdf87188447733eb5740914fe084eb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "Excel file (.xlsx, .xls, .csv) with columns: stonegroup_GUID, stonegroup_name, stonegroup_shortname, is_disabled",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Bulk upload completed with summary"
+                    },
+                    "400": {
+                        "description": "Invalid file format or structure"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    },
+                    "422": {
+                        "description": "Validation errors in file data"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1405,6 +1776,10 @@
         {
             "name": "MataData",
             "description": "MataData"
+        },
+        {
+            "name": "Stone Groups",
+            "description": "Stone Groups"
         }
     ]
 }

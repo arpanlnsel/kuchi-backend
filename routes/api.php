@@ -1,9 +1,11 @@
 <?php
+
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MataDataController;
 use App\Http\Controllers\Api\Admin\HomeBannerController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\StoneGroupController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -18,7 +20,7 @@ Route::ApiResource('home-banner', HomeBannerController::class)->only(['index', '
 // Public Booking routes
 Route::ApiResource('bookings', BookingController::class);
 
-// ✅ Public Events routes (No authentication required)
+// Public Events routes
 Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event_id}', [EventController::class, 'show']);
 
@@ -30,11 +32,16 @@ Route::middleware('auth:api')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
     });
 
-    // ✅ Admin-only Events routes (Create, Update, Delete)
+    // Admin-only Events routes
     Route::middleware('role:admin')->group(function () {
         Route::post('events', [EventController::class, 'store']);
         Route::post('events/{event_id}', [EventController::class, 'update']);
         Route::delete('events/{event_id}', [EventController::class, 'destroy']);
+        
+        // ✅ Stone Groups CRUD routes (Admin only)
+        Route::ApiResource('stone-groups', StoneGroupController::class);
+        Route::get('stone-groups/search/{keyword}', [StoneGroupController::class, 'search']);
+        Route::post('stone-groups/bulk-upload', [StoneGroupController::class, 'bulkUpload']);
     });
 
     // MataData routes - accessible by both admin and sales
