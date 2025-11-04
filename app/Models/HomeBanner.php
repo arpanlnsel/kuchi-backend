@@ -28,7 +28,7 @@ class HomeBanner extends Model
         ];
     }
 
-    // Relationship with User table for creator information of the banner image 
+    // Relationship with User table  
     public function creator()
     {
         return $this->belongsTo(User::class, 'create_user_id', 'id');
