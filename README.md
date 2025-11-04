@@ -9,3 +9,9 @@
 #php artisan l5-swagger:generate
 #php artisan route:clear
 #php artisan config:clear
+
+
+php artisan make:migration create_about_us
+php artisan migrate
+php artisan make:model AboutUs
+php artisan make:controller Api/AboutUsController

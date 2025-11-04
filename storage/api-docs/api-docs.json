@@ -9,6 +9,377 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/about-us": {
+            "get": {
+                "tags": [
+                    "About Us"
+                ],
+                "summary": "Get all About Us (Public)",
+                "operationId": "c5bf1ff0bedc16021e3f7c4c1ee3beb7",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of about us entries",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "About Our Company"
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "This is about our company history and mission..."
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "user_id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "format": "uuid"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "email": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/about-us/{id}": {
+            "get": {
+                "tags": [
+                    "About Us"
+                ],
+                "summary": "Get single about us entry by ID (Public)",
+                "operationId": "425d6fce12ae1b2ffa1d358ff8333648",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "About Us ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "About us entry details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "About us entry not found"
+                    }
+                }
+            }
+        },
+        "/api/admin/about-us": {
+            "post": {
+                "tags": [
+                    "About Us"
+                ],
+                "summary": "Create new about us entry (Admin only)",
+                "operationId": "fa686abe1a5c872050ff8bbbcd402745",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "About Our Company"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "This is about our company history and mission..."
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "About us entry created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "About us entry created successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/about-us/{id}": {
+            "put": {
+                "tags": [
+                    "About Us"
+                ],
+                "summary": "Update about us entry (Admin only)",
+                "operationId": "3868cc93b810d48b4713f790b64b4e26",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "About Us ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Updated About Us"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Updated about us content..."
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "About us entry updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "About us entry updated successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "About us entry not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "About Us"
+                ],
+                "summary": "Delete about us entry (Admin only)",
+                "operationId": "2826b3edb0eca88201655b5435403ffc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "About Us ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "About us entry deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "About us entry deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "About us entry not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/about-us/latest/active": {
+            "get": {
+                "tags": [
+                    "About Us"
+                ],
+                "summary": "Get latest active about us entry (Public)",
+                "operationId": "0c89b04d5763e64491c24d49bcc39e6e",
+                "responses": {
+                    "200": {
+                        "description": "Latest active about us entry",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No active about us entry found"
+                    }
+                }
+            }
+        },
         "/api/home-banner": {
             "get": {
                 "tags": [
@@ -373,14 +744,6 @@
                                         "type": "string",
                                         "format": "password",
                                         "example": "password123"
-                                    },
-                                    "device_name": {
-                                        "type": "string",
-                                        "example": "iPhone 14 Pro"
-                                    },
-                                    "device_type": {
-                                        "type": "string",
-                                        "example": "mobile"
                                     }
                                 },
                                 "type": "object"
@@ -562,16 +925,9 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "password",
                                     "isActive"
                                 ],
                                 "properties": {
-                                    "password": {
-                                        "description": "Current user password for verification",
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "your-current-password"
-                                    },
                                     "isActive": {
                                         "description": "Set user active status",
                                         "type": "boolean",
@@ -606,9 +962,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "description": "Invalid password"
                     },
                     "403": {
                         "description": "Forbidden - Cannot modify yourself"
@@ -721,9 +1074,29 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Get all users (Admin and Sales can access)",
+                "summary": "Get all users with pagination (Admin and Sales can access)",
                 "operationId": "6850afc51d996e99a705cf776cdbf71e",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
                     {
                         "name": "role",
                         "in": "query",
@@ -749,7 +1122,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of users",
+                        "description": "List of users with pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -758,21 +1131,173 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "total": {
-                                            "type": "integer",
-                                            "example": 10
-                                        },
                                         "data": {
                                             "type": "array",
                                             "items": {
                                                 "type": "object"
                                             }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 9
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 9
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/sales/search": {
+            "get": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Search users by name or email",
+                "operationId": "d340624d823add3569d6ab32cc3d98b7",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search query (name or email)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "john"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter by role",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "admin",
+                                "sales"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "isActive",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results with pagination",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 9
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 9
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Search query is required"
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -1371,6 +1896,377 @@
                 ]
             }
         },
+        "/api/privacy-policy": {
+            "get": {
+                "tags": [
+                    "Privacy Policy"
+                ],
+                "summary": "Get all Privacy Policy (Public)",
+                "operationId": "4ed053eb3ec7774742ef7ae9e16c3364",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of privacy policies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "General Privacy Policy"
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "This privacy policy describes how we handle your data..."
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "user_id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "format": "uuid"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "email": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/privacy-policy/{id}": {
+            "get": {
+                "tags": [
+                    "Privacy Policy"
+                ],
+                "summary": "Get single privacy policy by ID (Public)",
+                "operationId": "537dd323e05ce7115b6faef888d353dd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Privacy Policy ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Privacy policy details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Privacy policy not found"
+                    }
+                }
+            }
+        },
+        "/api/admin/privacy-policy": {
+            "post": {
+                "tags": [
+                    "Privacy Policy"
+                ],
+                "summary": "Create new privacy policy (Admin only)",
+                "operationId": "9217ed8b81f412d88f91404cb01368aa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "General Privacy Policy"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "This privacy policy describes how we collect, use, and protect your personal data..."
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Privacy policy created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Privacy policy created successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/privacy-policy/{id}": {
+            "put": {
+                "tags": [
+                    "Privacy Policy"
+                ],
+                "summary": "Update privacy policy (Admin only)",
+                "operationId": "6c5a13634455b6ce08b8f8c72a3630af",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Privacy Policy ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Updated Privacy Policy"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Updated privacy policy content..."
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Privacy policy updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Privacy policy updated successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Privacy policy not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Privacy Policy"
+                ],
+                "summary": "Delete privacy policy (Admin only)",
+                "operationId": "879b7b61a570be24eb44783030354e2d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Privacy Policy ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Privacy policy deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Privacy policy deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Privacy policy not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/privacy-policy/latest/active": {
+            "get": {
+                "tags": [
+                    "Privacy Policy"
+                ],
+                "summary": "Get latest active privacy policy (Public)",
+                "operationId": "097ed80bdad1fd3428f92007c16165e1",
+                "responses": {
+                    "200": {
+                        "description": "Latest active privacy policy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No active privacy policy found"
+                    }
+                }
+            }
+        },
         "/api/stone-groups": {
             "get": {
                 "tags": [
@@ -1741,6 +2637,344 @@
                     }
                 ]
             }
+        },
+        "/api/terms-and-conditions": {
+            "get": {
+                "tags": [
+                    "Terms & Conditions"
+                ],
+                "summary": "Get all terms and conditions (Public)",
+                "operationId": "f827b5041b1c651ddc5611dc39cecc96",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of terms and conditions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "General Terms"
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "These terms and conditions..."
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "user_id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "format": "uuid"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "email": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/terms-and-conditions/{id}": {
+            "get": {
+                "tags": [
+                    "Terms & Conditions"
+                ],
+                "summary": "Get single terms and conditions by ID (Public)",
+                "operationId": "3411f38897e9980de254708d5450949d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Terms and Conditions ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Terms and conditions details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Terms and conditions not found"
+                    }
+                }
+            }
+        },
+        "/api/admin/terms-and-conditions": {
+            "post": {
+                "tags": [
+                    "Terms & Conditions"
+                ],
+                "summary": "Create new terms and conditions (Admin only)",
+                "operationId": "91b92978c767d7284b956e9eb44f10e9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "General Terms"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "These terms and conditions govern your use of our website..."
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Terms and conditions created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terms and conditions created successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/terms-and-conditions/{id}": {
+            "put": {
+                "tags": [
+                    "Terms & Conditions"
+                ],
+                "summary": "Update terms and conditions (Admin only)",
+                "operationId": "929888d279bd399b1f4815a40301bf8e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Terms and Conditions ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Updated General Terms"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Updated content..."
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Terms and conditions updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terms and conditions updated successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Terms and conditions not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Terms & Conditions"
+                ],
+                "summary": "Delete terms and conditions (Admin only)",
+                "operationId": "75c4577f9bfc35ece46ac05262e6421c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Terms and Conditions ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Terms and conditions deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terms and conditions deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Terms and conditions not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1753,6 +2987,18 @@
         }
     },
     "tags": [
+        {
+            "name": "About Us",
+            "description": "API endpoints for About Us management"
+        },
+        {
+            "name": "Privacy Policy",
+            "description": "API endpoints for Privacy Policy management"
+        },
+        {
+            "name": "Terms & Conditions",
+            "description": "API endpoints for Terms and Conditions management"
+        },
         {
             "name": "Home Banner",
             "description": "Home Banner"

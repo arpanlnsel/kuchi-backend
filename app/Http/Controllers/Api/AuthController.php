@@ -90,9 +90,7 @@ class AuthController extends Controller
      *         @OA\JsonContent(
      *             required={"email","password"},
      *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="device_name", type="string", example="iPhone 14 Pro"),
-     *             @OA\Property(property="device_type", type="string", example="mobile")
+     *             @OA\Property(property="password", type="string", format="password", example="password123")
      *         )
      *     ),
      *     @OA\Response(
@@ -112,10 +110,10 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
-        
+
         // Check if user exists
         $user = User::where('email', $request->email)->first();
-        
+
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
@@ -124,19 +122,19 @@ class AuthController extends Controller
         if (!$user->isActive) {
             return response()->json(['error' => 'User account is inactive'], 403);
         }
-        
+
         // Check password
         if (!Hash::check($request->password, $user->password)) {
             return response()->json(['error' => 'Password does not match'], 401);
         }
-        
+
         if (!$token = auth()->attempt($credentials)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
         $user = auth()->user();
         $mataData = $this->saveMataData($request, $user->id);
-        
+
         return $this->respondWithToken($token, $mataData);
     }
 
@@ -166,7 +164,7 @@ class AuthController extends Controller
     private function getDeviceNameFromUserAgent(Request $request)
     {
         $userAgent = $request->header('User-Agent');
-        
+
         // Simple device detection
         if (stripos($userAgent, 'iPhone') !== false) {
             return 'iPhone';
@@ -181,7 +179,7 @@ class AuthController extends Controller
         } elseif (stripos($userAgent, 'Linux') !== false) {
             return 'Linux PC';
         }
-        
+
         return 'Unknown Device';
     }
 
@@ -191,55 +189,59 @@ class AuthController extends Controller
     private function getDeviceTypeFromUserAgent(Request $request)
     {
         $userAgent = $request->header('User-Agent');
-        
+
         // Simple device type detection
-        if (stripos($userAgent, 'Mobile') !== false || 
-            stripos($userAgent, 'iPhone') !== false || 
-            stripos($userAgent, 'Android') !== false) {
+        if (
+            stripos($userAgent, 'Mobile') !== false ||
+            stripos($userAgent, 'iPhone') !== false ||
+            stripos($userAgent, 'Android') !== false
+        ) {
             return 'mobile';
-        } elseif (stripos($userAgent, 'Tablet') !== false || 
-                  stripos($userAgent, 'iPad') !== false) {
+        } elseif (
+            stripos($userAgent, 'Tablet') !== false ||
+            stripos($userAgent, 'iPad') !== false
+        ) {
             return 'tablet';
         }
-        
+
         return 'desktop';
     }
 
     /**
- * @OA\Post(
- *     path="/api/auth/logout",
- *     summary="Logout user and update mata data",
- *     tags={"Authentication"},
- *     security={{"bearerAuth":{}}},
- *     @OA\Response(
- *         response=200,
- *         description="Successfully logged out",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Successfully logged out")
- *         )
- *     )
- * )
- */
-public function logout()
-{
-    $user = auth()->user();
-    
-    // Update the most recent mata_data entry for this user
-    $latestMataData = MataData::where('user_id', $user->id)
-        ->where('is_logout', false)
-        ->orderBy('last_login_time', 'desc')
-        ->first();
-    
-    if ($latestMataData) {
-        $latestMataData->logout_time = now();
-        $latestMataData->is_logout = true;
-        $latestMataData->save();
+     * @OA\Post(
+     *     path="/api/auth/logout",
+     *     summary="Logout user and update mata data",
+     *     tags={"Authentication"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successfully logged out",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successfully logged out")
+     *         )
+     *     )
+     * )
+     */
+    public function logout()
+    {
+        $user = auth()->user();
+
+        // Update the most recent mata_data entry for this user
+        $latestMataData = MataData::where('user_id', $user->id)
+            ->where('is_logout', false)
+            ->orderBy('last_login_time', 'desc')
+            ->first();
+
+        if ($latestMataData) {
+            $latestMataData->logout_time = now();
+            $latestMataData->is_logout = true;
+            $latestMataData->save();
+        }
+
+        auth()->logout();
+
+        return response()->json(['message' => 'Successfully logged out']);
     }
-    
-    auth()->logout();
-    
-    return response()->json(['message' => 'Successfully logged out']);
-}
 
     /**
      * @OA\Post(
@@ -303,8 +305,7 @@ public function logout()
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"password", "isActive"},
-     *             @OA\Property(property="password", type="string", format="password", example="your-current-password", description="Current user password for verification"),
+     *             required={"isActive"},
      *             @OA\Property(property="isActive", type="boolean", example=true, description="Set user active status")
      *         )
      *     ),
@@ -317,7 +318,6 @@ public function logout()
      *             @OA\Property(property="user", type="object")
      *         )
      *     ),
-     *     @OA\Response(response=401, description="Invalid password"),
      *     @OA\Response(response=403, description="Forbidden - Cannot modify yourself"),
      *     @OA\Response(response=404, description="User not found")
      * )
@@ -326,7 +326,6 @@ public function logout()
     {
         // Find the user to update
         $userToUpdate = User::find($id);
-
         if (!$userToUpdate) {
             return response()->json([
                 'success' => false,
@@ -343,7 +342,6 @@ public function logout()
         }
 
         $validator = Validator::make($request->all(), [
-            'password' => 'required|string',
             'isActive' => 'required|boolean',
         ]);
 
@@ -352,14 +350,6 @@ public function logout()
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
-        }
-
-        // Verify the current user's password
-        if (!Hash::check($request->password, auth()->user()->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid password. Password verification failed.'
-            ], 401);
         }
 
         // Update the user status
@@ -464,9 +454,23 @@ public function logout()
     /**
      * @OA\Get(
      *     path="/api/admin/sales",
-     *     summary="Get all users (Admin and Sales can access)",
+     *     summary="Get all users with pagination (Admin and Sales can access)",
      *     tags={"User Management"},
      *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=15)
+     *     ),
      *     @OA\Parameter(
      *         name="role",
      *         in="query",
@@ -483,11 +487,18 @@ public function logout()
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="List of users",
+     *         description="List of users with pagination",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="total", type="integer", example=10),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="pagination", type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="per_page", type="integer", example=15),
+     *                 @OA\Property(property="total", type="integer", example=9),
+     *                 @OA\Property(property="last_page", type="integer", example=1),
+     *                 @OA\Property(property="from", type="integer", example=1),
+     *                 @OA\Property(property="to", type="integer", example=9)
+     *             )
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthorized")
@@ -498,21 +509,142 @@ public function logout()
         $query = User::query();
 
         // Filter by role if provided
-        if ($request->has('role')) {
+        if ($request->has('role') && $request->role !== '') {
             $query->where('role', $request->role);
         }
 
         // Filter by active status if provided
-        if ($request->has('isActive')) {
+        if ($request->has('isActive') && $request->isActive !== '') {
             $query->where('isActive', $request->boolean('isActive'));
         }
 
-        $users = $query->orderBy('created_at', 'desc')->get();
+        // Set pagination parameters
+        $perPage = $request->get('per_page', 15);
+        $users = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'total' => $users->count(),
-            'data' => $users
+            'data' => $users->items(),
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'last_page' => $users->lastPage(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem()
+            ]
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/admin/sales/search",
+     *     summary="Search users by name or email",
+     *     tags={"User Management"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="q",
+     *         in="query",
+     *         description="Search query (name or email)",
+     *         required=true,
+     *         @OA\Schema(type="string", example="john")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="role",
+     *         in="query",
+     *         description="Filter by role",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"admin", "sales"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="isActive",
+     *         in="query",
+     *         description="Filter by active status",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Search results with pagination",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="pagination", type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="per_page", type="integer", example=15),
+     *                 @OA\Property(property="total", type="integer", example=9),
+     *                 @OA\Property(property="last_page", type="integer", example=1),
+     *                 @OA\Property(property="from", type="integer", example=1),
+     *                 @OA\Property(property="to", type="integer", example=9)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Search query is required"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function searchUsers(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'q' => 'required|string|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search query is required',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $searchQuery = $request->get('q');
+        $query = User::query();
+
+        // Search in name and email fields
+        $query->where(function ($q) use ($searchQuery) {
+            $q->where('name', 'like', "%{$searchQuery}%")
+                ->orWhere('email', 'like', "%{$searchQuery}%");
+        });
+
+        // Filter by role if provided
+        if ($request->has('role') && $request->role !== '') {
+            $query->where('role', $request->role);
+        }
+
+        // Filter by active status if provided
+        if ($request->has('isActive') && $request->isActive !== '') {
+            $query->where('isActive', $request->boolean('isActive'));
+        }
+
+        // Set pagination parameters
+        $perPage = $request->get('per_page', 15);
+        $users = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $users->items(),
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'last_page' => $users->lastPage(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem()
+            ]
         ]);
     }
 
