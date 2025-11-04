@@ -10,7 +10,7 @@
 #php artisan route:clear
 #php artisan config:clear
 
-#after create api
+#after create api 
 php artisan make:migration create_about_us
 php artisan migrate
 php artisan make:model AboutUs
