@@ -36,11 +36,12 @@ class AuthController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name","email","password","role"},
+     *             required={"name","password","role"},
      *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *             @OA\Property(property="phone_no", type="string", example="+919876543210"),
      *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="role", type="string", enum={"admin", "sales"}, example="sales")
+     *             @OA\Property(property="role", type="string", enum={"admin", "sales", "user"}, example="admin")
      *         )
      *     ),
      *     @OA\Response(
@@ -58,10 +59,20 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'nullable|string|email|max:255|unique:users',
+            'phone_no' => 'nullable|string|regex:/^\+[1-9]\d{1,14}$/|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|in:admin,sales',
+            'role' => 'required|in:admin,sales,user',
+        ], [
+            'phone_no.regex' => 'Phone number must be in international format (e.g., +919876543210)'
         ]);
+
+        // At least one of email or phone_no must be provided
+        if (!$request->email && !$request->phone_no) {
+            return response()->json([
+                'errors' => ['email_or_phone' => ['Either email or phone number is required']]
+            ], 422);
+        }
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
@@ -70,6 +81,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone_no' => $request->phone_no,
             'password' => Hash::make($request->password),
             'role' => $request->role,
         ]);
@@ -88,8 +100,9 @@ class AuthController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"email","password"},
+     *             required={"password"},
      *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *             @OA\Property(property="phone_no", type="string", example="+919876543210"),
      *             @OA\Property(property="password", type="string", format="password", example="password123")
      *         )
      *     ),
@@ -109,10 +122,30 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        // Validate that either email or phone_no is provided
+        $validator = Validator::make($request->all(), [
+            'email' => 'nullable|email',
+            'phone_no' => 'nullable|string',
+            'password' => 'required|string',
+        ]);
 
-        // Check if user exists
-        $user = User::where('email', $request->email)->first();
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if (!$request->email && !$request->phone_no) {
+            return response()->json([
+                'error' => 'Either email or phone number is required'
+            ], 422);
+        }
+
+        // Find user by email or phone_no
+        $user = null;
+        if ($request->email) {
+            $user = User::where('email', $request->email)->first();
+        } elseif ($request->phone_no) {
+            $user = User::where('phone_no', $request->phone_no)->first();
+        }
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
@@ -128,11 +161,13 @@ class AuthController extends Controller
             return response()->json(['error' => 'Password does not match'], 401);
         }
 
-        if (!$token = auth()->attempt($credentials)) {
+        // Generate JWT token
+        $token = auth()->login($user);
+
+        if (!$token) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        $user = auth()->user();
         $mataData = $this->saveMataData($request, $user->id);
 
         return $this->respondWithToken($token, $mataData);
@@ -143,11 +178,9 @@ class AuthController extends Controller
      */
     private function saveMataData(Request $request, $userId)
     {
-        // Get device information from request or user agent
         $deviceName = $request->input('device_name', $this->getDeviceNameFromUserAgent($request));
         $deviceType = $request->input('device_type', $this->getDeviceTypeFromUserAgent($request));
 
-        // Create mata_data record
         $mataData = MataData::create([
             'device_name' => $deviceName,
             'device_type' => $deviceType,
@@ -165,7 +198,6 @@ class AuthController extends Controller
     {
         $userAgent = $request->header('User-Agent');
 
-        // Simple device detection
         if (stripos($userAgent, 'iPhone') !== false) {
             return 'iPhone';
         } elseif (stripos($userAgent, 'iPad') !== false) {
@@ -190,7 +222,6 @@ class AuthController extends Controller
     {
         $userAgent = $request->header('User-Agent');
 
-        // Simple device type detection
         if (
             stripos($userAgent, 'Mobile') !== false ||
             stripos($userAgent, 'iPhone') !== false ||
@@ -226,7 +257,6 @@ class AuthController extends Controller
     {
         $user = auth()->user();
 
-        // Update the most recent mata_data entry for this user
         $latestMataData = MataData::where('user_id', $user->id)
             ->where('is_logout', false)
             ->orderBy('last_login_time', 'desc')
@@ -278,6 +308,7 @@ class AuthController extends Controller
      *             @OA\Property(property="id", type="string", format="uuid"),
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="phone_no", type="string"),
      *             @OA\Property(property="role", type="string"),
      *             @OA\Property(property="isActive", type="boolean")
      *         )
@@ -287,6 +318,96 @@ class AuthController extends Controller
     public function me()
     {
         return response()->json(auth()->user());
+    }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/auth/profile",
+     *     summary="Update user profile (name and email)",
+     *     tags={"Authentication"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="John Doe", description="User's full name"),
+     *             @OA\Property(property="email", type="string", format="email", example="john@example.com", description="User's email address")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully"),
+     *             @OA\Property(property="user", type="object",
+     *                 @OA\Property(property="id", type="string", format="uuid"),
+     *                 @OA\Property(property="name", type="string"),
+     *                 @OA\Property(property="email", type="string"),
+     *                 @OA\Property(property="phone_no", type="string"),
+     *                 @OA\Property(property="role", type="string"),
+     *                 @OA\Property(property="isActive", type="boolean")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Update only provided fields
+        if ($request->has('name') && !empty($request->name)) {
+            $user->name = $request->name;
+        }
+
+        if ($request->has('email') && !empty($request->email)) {
+            $user->email = $request->email;
+            // Reset email verification when email is changed
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully',
+            'user' => $user
+        ]);
     }
 
     /**
@@ -324,8 +445,8 @@ class AuthController extends Controller
      */
     public function updateUserStatus(Request $request, $id)
     {
-        // Find the user to update
         $userToUpdate = User::find($id);
+        
         if (!$userToUpdate) {
             return response()->json([
                 'success' => false,
@@ -333,7 +454,6 @@ class AuthController extends Controller
             ], 404);
         }
 
-        // Prevent user from modifying themselves
         if (auth()->id() === $userToUpdate->id) {
             return response()->json([
                 'success' => false,
@@ -352,7 +472,6 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Update the user status
         $userToUpdate->isActive = $request->isActive;
         $userToUpdate->save();
 
@@ -380,29 +499,22 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"old_password", "new_password", "reenter_new_password"},
-     *             @OA\Property(property="old_password", type="string", format="password", example="oldpassword123", description="Current password"),
-     *             @OA\Property(property="new_password", type="string", format="password", example="newpassword123", description="New password (min 6 characters)"),
-     *             @OA\Property(property="reenter_new_password", type="string", format="password", example="newpassword123", description="Confirm new password")
+     *             @OA\Property(property="old_password", type="string", format="password", example="oldpassword123"),
+     *             @OA\Property(property="new_password", type="string", format="password", example="newpassword123"),
+     *             @OA\Property(property="reenter_new_password", type="string", format="password", example="newpassword123")
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Password updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Password updated successfully")
-     *         )
+     *         description="Password updated successfully"
      *     ),
-     *     @OA\Response(response=401, description="Invalid old password"),
-     *     @OA\Response(response=404, description="User not found"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(response=401, description="Invalid old password")
      * )
      */
     public function updatePassword(Request $request, $id)
     {
-        // Find the user to update
         $userToUpdate = User::find($id);
-
+        
         if (!$userToUpdate) {
             return response()->json([
                 'success' => false,
@@ -425,7 +537,6 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Verify the old password
         if (!Hash::check($request->old_password, $userToUpdate->password)) {
             return response()->json([
                 'success' => false,
@@ -433,7 +544,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Check if new password is same as old password
         if (Hash::check($request->new_password, $userToUpdate->password)) {
             return response()->json([
                 'success' => false,
@@ -441,7 +551,6 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Update the password
         $userToUpdate->password = Hash::make($request->new_password);
         $userToUpdate->save();
 
@@ -454,71 +563,28 @@ class AuthController extends Controller
     /**
      * @OA\Get(
      *     path="/api/admin/sales",
-     *     summary="Get all users with pagination (Admin and Sales can access)",
+     *     summary="Get all users with pagination",
      *     tags={"User Management"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Page number",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         description="Number of items per page",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=15)
-     *     ),
-     *     @OA\Parameter(
-     *         name="role",
-     *         in="query",
-     *         description="Filter by role",
-     *         required=false,
-     *         @OA\Schema(type="string", enum={"admin", "sales"})
-     *     ),
-     *     @OA\Parameter(
-     *         name="isActive",
-     *         in="query",
-     *         description="Filter by active status",
-     *         required=false,
-     *         @OA\Schema(type="boolean")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of users with pagination",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
-     *             @OA\Property(property="pagination", type="object",
-     *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="per_page", type="integer", example=15),
-     *                 @OA\Property(property="total", type="integer", example=9),
-     *                 @OA\Property(property="last_page", type="integer", example=1),
-     *                 @OA\Property(property="from", type="integer", example=1),
-     *                 @OA\Property(property="to", type="integer", example=9)
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthorized")
+     *     @OA\Parameter(name="page", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="per_page", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="role", in="query", @OA\Schema(type="string", enum={"admin", "sales", "user"})),
+     *     @OA\Parameter(name="isActive", in="query", @OA\Schema(type="boolean")),
+     *     @OA\Response(response=200, description="List of users")
      * )
      */
     public function getAllUsers(Request $request)
     {
         $query = User::query();
 
-        // Filter by role if provided
         if ($request->has('role') && $request->role !== '') {
             $query->where('role', $request->role);
         }
 
-        // Filter by active status if provided
         if ($request->has('isActive') && $request->isActive !== '') {
             $query->where('isActive', $request->boolean('isActive'));
         }
 
-        // Set pagination parameters
         $perPage = $request->get('per_page', 15);
         $users = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
@@ -539,62 +605,11 @@ class AuthController extends Controller
     /**
      * @OA\Get(
      *     path="/api/admin/sales/search",
-     *     summary="Search users by name or email",
+     *     summary="Search users by name, email or phone",
      *     tags={"User Management"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="q",
-     *         in="query",
-     *         description="Search query (name or email)",
-     *         required=true,
-     *         @OA\Schema(type="string", example="john")
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Page number",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         description="Number of items per page",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=15)
-     *     ),
-     *     @OA\Parameter(
-     *         name="role",
-     *         in="query",
-     *         description="Filter by role",
-     *         required=false,
-     *         @OA\Schema(type="string", enum={"admin", "sales"})
-     *     ),
-     *     @OA\Parameter(
-     *         name="isActive",
-     *         in="query",
-     *         description="Filter by active status",
-     *         required=false,
-     *         @OA\Schema(type="boolean")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Search results with pagination",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
-     *             @OA\Property(property="pagination", type="object",
-     *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="per_page", type="integer", example=15),
-     *                 @OA\Property(property="total", type="integer", example=9),
-     *                 @OA\Property(property="last_page", type="integer", example=1),
-     *                 @OA\Property(property="from", type="integer", example=1),
-     *                 @OA\Property(property="to", type="integer", example=9)
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(response=400, description="Search query is required"),
-     *     @OA\Response(response=401, description="Unauthorized")
+     *     @OA\Parameter(name="q", in="query", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Search results")
      * )
      */
     public function searchUsers(Request $request)
@@ -614,23 +629,20 @@ class AuthController extends Controller
         $searchQuery = $request->get('q');
         $query = User::query();
 
-        // Search in name and email fields
         $query->where(function ($q) use ($searchQuery) {
             $q->where('name', 'like', "%{$searchQuery}%")
-                ->orWhere('email', 'like', "%{$searchQuery}%");
+                ->orWhere('email', 'like', "%{$searchQuery}%")
+                ->orWhere('phone_no', 'like', "%{$searchQuery}%");
         });
 
-        // Filter by role if provided
         if ($request->has('role') && $request->role !== '') {
             $query->where('role', $request->role);
         }
 
-        // Filter by active status if provided
         if ($request->has('isActive') && $request->isActive !== '') {
             $query->where('isActive', $request->boolean('isActive'));
         }
 
-        // Set pagination parameters
         $perPage = $request->get('per_page', 15);
         $users = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
@@ -654,17 +666,8 @@ class AuthController extends Controller
      *     summary="Get user by ID",
      *     tags={"User Management"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="User details"
-     *     ),
-     *     @OA\Response(response=404, description="User not found")
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="User details")
      * )
      */
     public function getUserById($id)

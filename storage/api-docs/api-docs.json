@@ -659,7 +659,6 @@
                             "schema": {
                                 "required": [
                                     "name",
-                                    "email",
                                     "password",
                                     "role"
                                 ],
@@ -673,6 +672,10 @@
                                         "format": "email",
                                         "example": "john@example.com"
                                     },
+                                    "phone_no": {
+                                        "type": "string",
+                                        "example": "+919876543210"
+                                    },
                                     "password": {
                                         "type": "string",
                                         "format": "password",
@@ -682,9 +685,10 @@
                                         "type": "string",
                                         "enum": [
                                             "admin",
-                                            "sales"
+                                            "sales",
+                                            "user"
                                         ],
-                                        "example": "sales"
+                                        "example": "admin"
                                     }
                                 },
                                 "type": "object"
@@ -731,7 +735,6 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "email",
                                     "password"
                                 ],
                                 "properties": {
@@ -739,6 +742,10 @@
                                         "type": "string",
                                         "format": "email",
                                         "example": "john@example.com"
+                                    },
+                                    "phone_no": {
+                                        "type": "string",
+                                        "example": "+919876543210"
                                     },
                                     "password": {
                                         "type": "string",
@@ -880,11 +887,136 @@
                                         "email": {
                                             "type": "string"
                                         },
+                                        "phone_no": {
+                                            "type": "string"
+                                        },
                                         "role": {
                                             "type": "string"
                                         },
                                         "isActive": {
                                             "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/profile": {
+            "patch": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Update user profile (name and email)",
+                "operationId": "a5ca90f626ef4bdcdeb3c37a5ccb9443",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "description": "User's full name",
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "description": "User's email address",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile updated successfully"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone_no": {
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                },
+                                                "isActive": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1008,19 +1140,16 @@
                                 ],
                                 "properties": {
                                     "old_password": {
-                                        "description": "Current password",
                                         "type": "string",
                                         "format": "password",
                                         "example": "oldpassword123"
                                     },
                                     "new_password": {
-                                        "description": "New password (min 6 characters)",
                                         "type": "string",
                                         "format": "password",
                                         "example": "newpassword123"
                                     },
                                     "reenter_new_password": {
-                                        "description": "Confirm new password",
                                         "type": "string",
                                         "format": "password",
                                         "example": "newpassword123"
@@ -1033,33 +1162,10 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Password updated successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Password updated successfully"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Password updated successfully"
                     },
                     "401": {
                         "description": "Invalid old password"
-                    },
-                    "404": {
-                        "description": "User not found"
-                    },
-                    "422": {
-                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -1074,47 +1180,38 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Get all users with pagination (Admin and Sales can access)",
+                "summary": "Get all users with pagination",
                 "operationId": "6850afc51d996e99a705cf776cdbf71e",
                 "parameters": [
                     {
                         "name": "page",
                         "in": "query",
-                        "description": "Page number",
-                        "required": false,
                         "schema": {
-                            "type": "integer",
-                            "example": 1
+                            "type": "integer"
                         }
                     },
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "Number of items per page",
-                        "required": false,
                         "schema": {
-                            "type": "integer",
-                            "example": 15
+                            "type": "integer"
                         }
                     },
                     {
                         "name": "role",
                         "in": "query",
-                        "description": "Filter by role",
-                        "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "admin",
-                                "sales"
+                                "sales",
+                                "user"
                             ]
                         }
                     },
                     {
                         "name": "isActive",
                         "in": "query",
-                        "description": "Filter by active status",
-                        "required": false,
                         "schema": {
                             "type": "boolean"
                         }
@@ -1122,58 +1219,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of users with pagination",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object"
-                                            }
-                                        },
-                                        "pagination": {
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 9
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "from": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "to": {
-                                                    "type": "integer",
-                                                    "example": 9
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
+                        "description": "List of users"
                     }
                 },
                 "security": [
@@ -1188,119 +1234,21 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Search users by name or email",
+                "summary": "Search users by name, email or phone",
                 "operationId": "d340624d823add3569d6ab32cc3d98b7",
                 "parameters": [
                     {
                         "name": "q",
                         "in": "query",
-                        "description": "Search query (name or email)",
                         "required": true,
                         "schema": {
-                            "type": "string",
-                            "example": "john"
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Number of items per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 15
-                        }
-                    },
-                    {
-                        "name": "role",
-                        "in": "query",
-                        "description": "Filter by role",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "admin",
-                                "sales"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "isActive",
-                        "in": "query",
-                        "description": "Filter by active status",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
+                            "type": "string"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Search results with pagination",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object"
-                                            }
-                                        },
-                                        "pagination": {
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 9
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "from": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "to": {
-                                                    "type": "integer",
-                                                    "example": 9
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Search query is required"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
+                        "description": "Search results"
                     }
                 },
                 "security": [
@@ -1323,17 +1271,13 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string",
-                            "format": "uuid"
+                            "type": "string"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "User details"
-                    },
-                    "404": {
-                        "description": "User not found"
                     }
                 },
                 "security": [
@@ -1660,6 +1604,262 @@
                 ]
             }
         },
+        "/api/location": {
+            "get": {
+                "tags": [
+                    "User Location"
+                ],
+                "summary": "Get user's latest location",
+                "operationId": "8bfed80cdcde17300f906516d0cddd60",
+                "responses": {
+                    "200": {
+                        "description": "Latest location retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "location": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "No location found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "User Location"
+                ],
+                "summary": "Save or update user location",
+                "operationId": "cd51453c6687ad60a3b342cfce90a0af",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "lat",
+                                    "long"
+                                ],
+                                "properties": {
+                                    "lat": {
+                                        "description": "Latitude",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 22.5726
+                                    },
+                                    "long": {
+                                        "description": "Longitude",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 88.3639
+                                    },
+                                    "city": {
+                                        "description": "City name",
+                                        "type": "string",
+                                        "example": "Kolkata"
+                                    },
+                                    "country_code": {
+                                        "description": "Country code (ISO 3166-1 alpha-2)",
+                                        "type": "string",
+                                        "example": "IN"
+                                    },
+                                    "currency_code": {
+                                        "description": "Currency code (ISO 4217)",
+                                        "type": "string",
+                                        "example": "INR"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Location saved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Location saved successfully"
+                                        },
+                                        "location": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/location/{id}": {
+            "get": {
+                "tags": [
+                    "User Location"
+                ],
+                "summary": "Get location by ID",
+                "operationId": "68118b6ec3e04775a26590419337ad90",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Location ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "location": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Location not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "User Location"
+                ],
+                "summary": "Delete a specific location",
+                "operationId": "b93800d6cef769bfe81223e6414fa704",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Location ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Location not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/location/history": {
+            "get": {
+                "tags": [
+                    "User Location"
+                ],
+                "summary": "Get user's location history with pagination",
+                "operationId": "3376ea28fb96ab2d4138bad7c39f8205",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location history retrieved successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/mata-data": {
             "get": {
                 "tags": [
@@ -1894,6 +2094,218 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/auth/otp/send": {
+            "post": {
+                "tags": [
+                    "OTP Authentication"
+                ],
+                "summary": "Send OTP to phone number",
+                "operationId": "66b52e60360ad015dbb0c1f396b5ceb8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone_no"
+                                ],
+                                "properties": {
+                                    "phone_no": {
+                                        "description": "Phone number with country code",
+                                        "type": "string",
+                                        "example": "+919876543210"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OTP sent successfully to your phone number"
+                                        },
+                                        "phone_no": {
+                                            "type": "string",
+                                            "example": "+919876543210"
+                                        },
+                                        "expires_in": {
+                                            "type": "string",
+                                            "example": "5 minutes"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Failed to send OTP"
+                    }
+                }
+            }
+        },
+        "/api/auth/otp/verify": {
+            "post": {
+                "tags": [
+                    "OTP Authentication"
+                ],
+                "summary": "Verify OTP and login user",
+                "operationId": "ef5228f251cc79af3a84c3456b93f0a3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone_no",
+                                    "otp"
+                                ],
+                                "properties": {
+                                    "phone_no": {
+                                        "description": "Phone number with country code",
+                                        "type": "string",
+                                        "example": "+919876543210"
+                                    },
+                                    "otp": {
+                                        "description": "6-digit OTP code",
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified and user logged in successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login successful"
+                                        },
+                                        "existing_user": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "mata_data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or expired OTP"
+                    },
+                    "403": {
+                        "description": "Account is inactive"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/auth/otp/resend": {
+            "post": {
+                "tags": [
+                    "OTP Authentication"
+                ],
+                "summary": "Resend OTP to phone number",
+                "operationId": "9f52e75c51b8037c39e4859325c074c1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone_no"
+                                ],
+                                "properties": {
+                                    "phone_no": {
+                                        "description": "Phone number with country code",
+                                        "type": "string",
+                                        "example": "+919876543210"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP resent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OTP resent successfully"
+                                        },
+                                        "phone_no": {
+                                            "type": "string",
+                                            "example": "+919876543210"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                }
             }
         },
         "/api/privacy-policy": {
@@ -2992,6 +3404,10 @@
             "description": "API endpoints for About Us management"
         },
         {
+            "name": "OTP Authentication",
+            "description": "OTP-based authentication endpoints"
+        },
+        {
             "name": "Privacy Policy",
             "description": "API endpoints for Privacy Policy management"
         },
@@ -3018,6 +3434,10 @@
         {
             "name": "Events",
             "description": "Events"
+        },
+        {
+            "name": "User Location",
+            "description": "User Location"
         },
         {
             "name": "MataData",

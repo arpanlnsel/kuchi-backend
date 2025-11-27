@@ -1,19 +1,30 @@
 <?php
+
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\MataDataController;
 use App\Http\Controllers\Api\Admin\HomeBannerController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\StoneGroupController;
 use App\Http\Controllers\Api\TermsAndConditionsController;
-use App\Http\Controllers\Api\PrivacyPolicyController;   
-use App\Http\Controllers\Api\AboutUsController;   
+use App\Http\Controllers\Api\PrivacyPolicyController;
+use App\Http\Controllers\Api\AboutUsController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\LocationController;
 
 // Public routes
 Route::prefix('auth')->group(function () {
+    // Email/Password Authentication
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+
+    // OTP Authentication
+    Route::prefix('otp')->group(function () {
+        Route::post('send', [OtpController::class, 'sendOtp']);
+        Route::post('verify', [OtpController::class, 'verifyOtp']);
+        Route::post('resend', [OtpController::class, 'resendOtp']);
+    });
 });
 
 // Public Home Banner routes
@@ -44,6 +55,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
         Route::get('me', [AuthController::class, 'me']);
+        Route::patch('profile', [AuthController::class, 'updateProfile']);
     });
 
     // Admin-only Events routes
@@ -51,15 +63,15 @@ Route::middleware('auth:api')->group(function () {
         Route::post('events', [EventController::class, 'store']);
         Route::post('events/{event_id}', [EventController::class, 'update']);
         Route::delete('events/{event_id}', [EventController::class, 'destroy']);
-        
+
         // Stone Groups CRUD routes (Admin only)
         Route::ApiResource('stone-groups', StoneGroupController::class);
         Route::get('stone-groups/search/{keyword}', [StoneGroupController::class, 'search']);
         Route::post('stone-groups/bulk-upload', [StoneGroupController::class, 'bulkUpload']);
     });
 
-    // MataData routes - accessible by both admin and sales
-    Route::middleware('role:sales,admin')->group(function () {
+    // MataData routes - accessible by admin, sales, and user
+    Route::middleware('role:user,sales,admin')->group(function () {
         Route::get('mata-data', [MataDataController::class, 'index']);
         Route::get('mata-data/active-sessions', [MataDataController::class, 'getActiveSessions']);
         Route::get('mata-data/{mata_id}', [MataDataController::class, 'show']);
@@ -83,10 +95,10 @@ Route::middleware('auth:api')->group(function () {
         Route::get('dashboard', function () {
             return response()->json(['message' => 'Admin Dashboard']);
         });
-        
+
         Route::ApiResource('home-banner', HomeBannerController::class)->only(['store', 'update', 'destroy']);
         Route::delete('mata-data/{mata_id}', [MataDataController::class, 'destroy']);
-        
+
         // Terms & Conditions CRUD routes (Admin only)
         Route::prefix('terms-and-conditions')->group(function () {
             Route::post('/', [TermsAndConditionsController::class, 'store']);
@@ -109,10 +121,27 @@ Route::middleware('auth:api')->group(function () {
         });
     });
 
-    // Sales dashboard
+    // Sales and Admin dashboard
     Route::middleware('role:sales,admin')->group(function () {
         Route::get('sales/dashboard', function () {
             return response()->json(['message' => 'Sales Dashboard']);
+        });
+    });
+
+    // User dashboard - accessible by all authenticated users
+    Route::middleware('role:user,sales,admin')->group(function () {
+        Route::get('user/dashboard', function () {
+            return response()->json(['message' => 'User Dashboard']);
+        });
+    });
+
+    Route::middleware('auth:api')->group(function () {
+        Route::prefix('location')->group(function () {
+            Route::post('/', [LocationController::class, 'saveLocation']);
+            Route::get('/', [LocationController::class, 'getLatestLocation']);
+            Route::get('/history', [LocationController::class, 'getLocationHistory']);
+            Route::get('/{id}', [LocationController::class, 'getLocationById']);
+            Route::delete('/{id}', [LocationController::class, 'deleteLocation']);
         });
     });
 });

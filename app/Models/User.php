@@ -18,9 +18,11 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'email',
+        'phone_no',
         'password',
         'role',
         'isActive',
+        'phone_verified_at',
     ];
 
     protected $hidden = [
@@ -32,6 +34,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'isActive' => 'boolean',
         ];
@@ -39,9 +42,9 @@ class User extends Authenticatable implements JWTSubject
 
     // JWT Methods
     public function getJWTIdentifier()
-{
-    return $this->getKey(); // This should return the UUID
-}
+    {
+        return $this->getKey(); // This should return the UUID
+    }
 
     public function getJWTCustomClaims()
     {
@@ -59,11 +62,30 @@ class User extends Authenticatable implements JWTSubject
         return $this->role === 'sales';
     }
 
+    public function isUser()
+    {
+        return $this->role === 'user';
+    }
+
     // Relationship with MataData
     public function mataData()
     {
         return $this->hasMany(MataData::class, 'user_id', 'id');
     }
-    // cast isActive to boolean
-    
+
+    // Relationship with OTPs
+    public function otps()
+    {
+        return $this->hasMany(Otp::class, 'user_id', 'id');
+    }
+
+    public function locations()
+    {
+        return $this->hasMany(UserLocation::class);
+    }
+
+    public function latestLocation()
+    {
+        return $this->hasOne(UserLocation::class)->latestOfMany();
+    }
 }
